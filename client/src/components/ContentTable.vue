@@ -17,10 +17,9 @@
       card-class="table-card"
       table-class="table"
       table-header-class="table-header"
-      :rows="data"
+      :rows="allTasks"
       :columns="columns"
       row-key="id"
-      :grid="useGridFormat"
       row
     >
       <template v-slot:body-cell-action="props">
@@ -33,30 +32,31 @@
           />
         </td>
       </template>
+
       <template v-slot:body-cell-status="props">
-    <td class="text-center">
-      <q-badge
-        v-if="props.row.status === 'ongoing'"
-        color="yellow"
-        class="text-black"
-      >
-        Ongoing
-      </q-badge>
-      <q-badge
-        v-else-if="props.row.status === 'complete'"
-        color="green"
-        class="text-black"
-      >
-        Complete
-      </q-badge>
-    </td>
-  </template>
+        <td class="text-center">
+          <q-badge
+            v-if="props.row.status === 'ongoing'"
+            color="yellow"
+            class="text-black"
+          >
+            Ongoing
+          </q-badge>
+          <q-badge
+            v-else-if="props.row.status === 'complete'"
+            color="green"
+            class="text-black"
+          >
+            Complete
+          </q-badge>
+        </td>
+      </template>
     </q-table>
     <DialogTemplate
       :openDialog="isOpen"
       :dialogTitle="dialogTitle"
       :dialogType="dialogType"
-      :taskID="taskID"
+      :taskInfo="task"
       @closeDialog="closeDialog"
     />
   </q-page>
@@ -66,7 +66,7 @@
 import { defineComponent } from "vue";
 import ActionButtons from "./ActionButtons.vue";
 import DialogTemplate from "./DialogTemplate.vue";
-import { getAllTasks } from 'src/utils/functions/getTask'
+import { getAllTasks, getTask } from 'src/utils/functions/Tasks'
 const columns = [
   {
     name: "id",
@@ -145,8 +145,9 @@ export default defineComponent({
       dialogTitle: "",
       dialogType: "",
       taskID: null,
-      data:[],
+      allTasks:[],
       error:null,
+      task:{},
     };
   },
   computed: {
@@ -155,20 +156,25 @@ export default defineComponent({
     },
   },
   methods: {
-    openDialog({ title, type, id = null }) {
+    async openDialog({ title, type, id = null }) {
       this.dialogTitle = title;
       this.dialogType = type;
       this.isOpen = true;
       this.taskID = id
+      if(this.taskID!==null){
+        const response = await getTask(this.taskID)
+        this.task = response.data
+      }
       console.log(this.dialogTitle, this.dialogType, this.taskID);
     },
     closeDialog(updatedValue) {
       this.isOpen = updatedValue;
+      this.task = {}
     },
   },
   async mounted(){
     const response = await getAllTasks()
-    this.data = response.data
+    this.allTasks = response.data
   }
 });
 </script>

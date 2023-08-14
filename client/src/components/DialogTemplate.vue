@@ -22,6 +22,7 @@
             label="What is your task today?"
             :readonly="type === 'VIEW'"
             :rules="[required, minLength]"
+
           />
           <p>Description</p>
           <q-input
@@ -36,8 +37,11 @@
             class="input toggle-input"
             v-model="status"
             label="Complete"
+            color="primary"
+            :disable="type === 'VIEW'"
           />
-          <p>File Upload</p>
+          <p>File</p>
+          <span v-if="type==='VIEW'">{{ file[0]['name']}}</span>
           <q-file
             class="input file-input"
             filled
@@ -45,6 +49,7 @@
             v-model="file"
             label="Upload file related to your task"
             counter
+            v-if="type==='INPUT'"
           >
             <template v-slot:prepend>
               <q-icon name="cloud_upload" @click.stop.prevent />
@@ -60,7 +65,7 @@
         </q-card-section>
 
         <q-card-actions class="bg-white action-section">
-          <q-btn color="primary" label="Save" @click="submitForm" />
+          <q-btn color="primary" label="Save" @click="submitForm(task.id)" v-if="type==='INPUT'" />
           <q-btn
             class="text-primary"
             outlined
@@ -89,7 +94,7 @@
             class="text-negative"
             color="negative"
             label="Confirm"
-            @click="closeDialog"
+            @click="deleteTask(task.id)"
           />
           <q-btn
             class="text-negative"
@@ -107,7 +112,7 @@
 <script>
 import { defineComponent, ref } from "vue";
 import { getInputValues } from "src/utils/functions/functions";
-import { newTask } from "src/utils/functions/getTask";
+import { newTask, deleteTask, editTask } from "src/utils/functions/Tasks";
 export default defineComponent({
   name: "DialogTemplate",
   props: {
@@ -120,8 +125,8 @@ export default defineComponent({
     dialogType: {
       type: String,
     },
-    taskID:{
-      type: Number,
+    taskInfo:{
+      type: Object,
     }
   },
   data() {
@@ -129,13 +134,13 @@ export default defineComponent({
       title: "",
       description: "",
       status: false,
-      file: null,
+      file: [{}],
     };
     return {
       isOpen: this.openDialog,
       header: this.dialogTitle,
       type: this.dialogType,
-      id: this.taskID,
+      task: this.taskInfo,
       ...this.initialState,
     };
   },
@@ -145,11 +150,33 @@ export default defineComponent({
       this.isOpen = false;
       this.$emit("closeDialog", this.isOpen);
     },
-    async submitForm() {
+    async submitForm(id) {
       const formData = getInputValues(this);
-      const response = await newTask(formData);
+      if(formData !== 0){
+        if(id !== undefined){
+          console.log(formData)
+          const response = await editTask(formData, id)
+          console.log(response)
+        }else{
+          const response = await newTask(formData);
+          console.log(response)
+        }
+      }else{
+        alert('Empty task cannot be recorded')
+      }
+
+    },
+    async deleteTask(id){
+      const response = await deleteTask(id)
       console.log(response)
     },
+    isToggle(){
+      if(this.task.status !== 'complete'){
+        this.status = false
+      }else{
+        this.status = true
+      }
+    }
   },
   watch: {
     openDialog(newValue) {
@@ -161,8 +188,12 @@ export default defineComponent({
     dialogType(newValue) {
       this.type = newValue;
     },
-    taskID(newValue){
-      this.id = newValue
+    taskInfo(newValue){
+      this.task = newValue
+      this.title = newValue.title
+      this.description = newValue.description
+      this.status = newValue.status === 'complete'?true:false
+      this.file = [{name: newValue.file_name}]
     }
   },
   computed: {

@@ -12,29 +12,69 @@ class TaskController extends Controller
 {
     public function getAllTasks(){
         try {
-            return DB::select("select * from tbl_task");
+            return Task::all();
         } catch (\Throwable $th) {
             throw $th;
         }
 
     }
-    public function createTask(Request $request){
-        // try {
-
-        //     return response()->json(['message' => 'Data inserted successfully'], 201);
-        // } catch (\Throwable $th) {
-        //     return response()->json(['message' => $th]);
-        // }
-        $task = new Task;
-        $task->title=$request->title;
-        $task->description=$request->description;
-        $task->status=$request->status;
-        $task->file_name=$request->file;
-        $result = $task->save();
-        if($result){
-            return ['message'=>'Task Recorded Successfully', 'code'=>200];
-        }else{
-            return ['message'=>'Error saving task'];
+    public function getTask($id){
+        try {
+            $task = Task::find($id);
+            if(!$task){
+                return response()->json(['message'=>'Task not found'], 404);
+            }
+            return response()->json($task);
+        } catch (\Throwable $th) {
+            return response()->json(['message'=>$th]);
         }
+    }
+    public function createTask(Request $request){
+        try {
+            $task = new Task;
+            $task->title=$request->title;
+            $task->description=$request->description;
+            $task->status=$request->status;
+            $task->file_name=$request->file;
+            $result = $task->save();
+            if($result){
+                return response()->json(['message'=>'Task Successfully Recorded'], 200);
+            }
+        } catch (\Throwable $th) {
+            return ['message'=>$th];
+        }
+    }
+    public function deleteTask($id){
+        try {
+            $task = Task::find($id);
+            if($task){
+                $task->delete();
+                return response()->json(['message'=>'Task Successfully Deleted'], 200);
+            }else{
+                return response()->json(['message'=>'Task not found'], 404);
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['message'=>$th]);
+        }
+    }
+
+    public function editTask(Request $request, $id){
+        $task = Task::find($id);
+        $validatedData = $request->validate([
+            'title' => 'required',
+        ]);
+        try {
+            if($task){
+                $task->update($validatedData);
+                return response()->json(['message'=>'Task Successfully Updated'], 200);
+            }else{
+                return response()->json(['message'=>'Task not found'], 404);
+            }
+        } catch (\Throwable $th) {
+            return response()->json(['message'=>'error']);
+        }
+
+
+
     }
 }
