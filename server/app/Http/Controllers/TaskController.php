@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\FileUploadHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 
 class TaskController extends Controller
@@ -14,7 +14,7 @@ class TaskController extends Controller
         try {
             return Task::all();
         } catch (\Throwable $th) {
-            throw $th;
+            return response()->json(['message'=>$th->getMessage()], 500);
         }
 
     }
@@ -26,22 +26,30 @@ class TaskController extends Controller
             }
             return response()->json($task);
         } catch (\Throwable $th) {
-            return response()->json(['message'=>$th]);
+            return response()->json(['message'=>$th->getMessage()], 500);
         }
     }
     public function createTask(Request $request){
         try {
-            $task = new Task;
-            $task->title=$request->title;
-            $task->description=$request->description;
-            $task->status=$request->status;
-            $task->file_name=$request->file;
-            $result = $task->save();
-            if($result){
-                return response()->json(['message'=>'Task Successfully Recorded'], 200);
-            }
+            $fileUploader = new FileUploadHelper();
+            $file_name = $fileUploader->getFileName($request);
+                if($file_name!==0){
+                    $task = new Task;
+                    $task->title=$request->title;
+                    $task->description=$request->description;
+                    $task->status=$request->status;
+                    $task->file_name=$file_name;
+                    $result = $task->save();
+                    $fileUploader->upload($request, $file_name);
+                    if($result){
+                        return response()->json(['message'=>'Task Successfully Recorded', 'success'=>true], 200);
+                    }
+                }else{
+                    return response()->json(['message'=>'There is a problem uploading your file.', 'success'=>false], 404);
+                }
+
         } catch (\Throwable $th) {
-            return ['message'=>$th];
+            return response()->json(['message'=>$th->getMessage()], 500);
         }
     }
     public function deleteTask($id){
@@ -49,32 +57,71 @@ class TaskController extends Controller
             $task = Task::find($id);
             if($task){
                 $task->delete();
-                return response()->json(['message'=>'Task Successfully Deleted'], 200);
+                return response()->json(['message'=>'Task Successfully Deleted', 'success'=>true], 200);
             }else{
-                return response()->json(['message'=>'Task not found'], 404);
+                return response()->json(['message'=>'Task not found' , 'success'=>false], 404);
             }
         } catch (\Throwable $th) {
-            return response()->json(['message'=>$th]);
+            return response()->json(['message'=>$th->getMessage()], 500);
         }
     }
 
     public function editTask(Request $request, $id){
-        $task = Task::find($id);
-        $validatedData = $request->validate([
-            'title' => 'required',
-        ]);
         try {
-            if($task){
-                $task->update($validatedData);
-                return response()->json(['message'=>'Task Successfully Updated'], 200);
-            }else{
-                return response()->json(['message'=>'Task not found'], 404);
+            $task = Task::find($id);
+            $fileUploader = new FileUploadHelper();
+
+            if($request->file->getClientOriginalName() === $task->file_name){
+                $validatedData = $request->validate([
+                    'title' => 'required',
+                    'description'=>'nullable',
+                    'status'=>'required',
+                ]);
+                if($task){
+                    $task->update($validatedData);
+                    return response()->json(['message'=>'Task Successfully Updated', 'success'=>true], 200);
+                }else{
+                    return response()->json(['message'=>'Task not found', 'success'=>false], 404);
+                }
+            }
+            else{
+                $file_name = $fileUploader->getFileName($request);
+                if($file_name!==null){
+                    $validatedData = $request->validate([
+                        'title' => 'required',
+                        'description'=>'nullable',
+                        'status'=>'required',
+                        'file_name'=>'nullable'
+                    ]);
+
+                    if($task){
+                        // $task->update($validatedData);
+                        $task->title= $validatedData['title'];
+                        $task->description = $validatedData['description'];
+                        $task->status = $validatedData['status'];
+                        $task->file_name = $file_name;
+                        $task->update();
+                        $fileUploader->upload($request, $file_name);
+                        return response()->json(['message'=>'Task Successfully Updated', 'success'=>true], 200);
+                    }else{
+                        return response()->json(['message'=>'Task not found', 'success'=>false], 404);
+                    }
+                }
             }
         } catch (\Throwable $th) {
-            return response()->json(['message'=>'error']);
+            return response()->json(['message'=>$th->getMessage()]);
         }
+    }
 
-
-
+    public function getFileObject($fileName){
+        $filePath = public_path('uploads/' . $fileName);
+        if (file_exists($filePath)) {
+            $fileContent = file_get_contents($filePath);
+            return response($fileContent, 200)
+                ->header('Content-Type', mime_content_type($filePath));
+        } else {
+            return response()->json(['error' => 'File not found', 'success'=>false], 404);
+        }
     }
 }
+

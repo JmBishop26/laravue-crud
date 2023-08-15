@@ -1,3 +1,6 @@
+<!--
+  component for a reusable dialog
+ -->
 <template>
   <div class="q-pa-md q-gutter-sm dialog-container">
     <q-dialog
@@ -9,7 +12,7 @@
       transition-hide="scale"
     >
       <q-card class="dialog-card">
-        <q-card-section class="title-section">
+        <q-card-section :class="header==='Update Task'?'title-section bg-positive':'title-section'">
           <div class="text-h6 title-text">{{ header }}</div>
         </q-card-section>
 
@@ -22,6 +25,7 @@
             label="What is your task today?"
             :readonly="type === 'VIEW'"
             :rules="[required, minLength]"
+            name="title"
 
           />
           <p>Description</p>
@@ -31,6 +35,8 @@
             v-model="description"
             label="Describe your task (optional)"
             :readonly="type === 'VIEW'"
+            name="description"
+
           />
           <p>Status</p>
           <q-toggle
@@ -39,17 +45,22 @@
             label="Complete"
             color="primary"
             :disable="type === 'VIEW'"
+            name="status"
+
           />
           <p>File</p>
-          <span v-if="type==='VIEW'">{{ file[0]['name']}}</span>
+          <span>Preview: </span>
+          <a :href="fileURL(filePath)" target="_blank" v-if="type==='VIEW'">{{ filePath }}</a>
           <q-file
             class="input file-input"
             filled
             bottom-slots
-            v-model="file"
+            v-model="fileUpload"
             label="Upload file related to your task"
             counter
             v-if="type==='INPUT'"
+            name="fileUpload"
+
           >
             <template v-slot:prepend>
               <q-icon name="cloud_upload" @click.stop.prevent />
@@ -57,7 +68,7 @@
             <template v-slot:append>
               <q-icon
                 name="close"
-                @click.stop.prevent="file = null"
+                @click.stop.prevent="fileUpload = null"
                 class="cursor-pointer"
               />
             </template>
@@ -76,7 +87,6 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
     <q-dialog v-else-if="type === 'CONFIRM'" v-model="isOpen" persistent>
       <q-card class="dialog-card">
         <q-card-section class="bg-negative text-white title-section">
@@ -110,12 +120,13 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
-import { getInputValues } from "src/utils/functions/functions";
-import { newTask, deleteTask, editTask } from "src/utils/functions/Tasks";
+import { defineComponent } from "vue";
+import { getInputValues, toFileObject, showAlert, fileURL} from "src/utils/functions/functions";
+import { newTask, deleteTask, editTask, getFileObject } from "src/utils/functions/Tasks";
 export default defineComponent({
   name: "DialogTemplate",
   props: {
+    //these are the properties that were passed from parent component to this child component
     openDialog: {
       type: Boolean,
     },
@@ -134,7 +145,8 @@ export default defineComponent({
       title: "",
       description: "",
       status: false,
-      file: [{}],
+      fileUpload: [],
+      filePath: '',
     };
     return {
       isOpen: this.openDialog,
@@ -145,38 +157,41 @@ export default defineComponent({
     };
   },
   methods: {
+    //this closes the dialog and resetting the values of the variables
     closeDialog() {
       Object.assign(this, this.initialState);
       this.isOpen = false;
       this.$emit("closeDialog", this.isOpen);
     },
+    //function to submit the form for creating and editing tasks
     async submitForm(id) {
       const formData = getInputValues(this);
       if(formData !== 0){
         if(id !== undefined){
-          console.log(formData)
           const response = await editTask(formData, id)
-          console.log(response)
+          showAlert(response)
         }else{
           const response = await newTask(formData);
-          console.log(response)
+          showAlert(response)
         }
       }else{
-        alert('Empty task cannot be recorded')
+        showAlert({ title:'Error', message: "Empty task cannot be recorded"})
       }
-
     },
+    //function to delete task
     async deleteTask(id){
       const response = await deleteTask(id)
-      console.log(response)
+      showAlert(response)
     },
+    //function to toggle the toggle switch in the dialog, which depends on the value
     isToggle(){
       if(this.task.status !== 'complete'){
         this.status = false
       }else{
         this.status = true
       }
-    }
+    },
+    fileURL,
   },
   watch: {
     openDialog(newValue) {
@@ -188,15 +203,21 @@ export default defineComponent({
     dialogType(newValue) {
       this.type = newValue;
     },
-    taskInfo(newValue){
-      this.task = newValue
-      this.title = newValue.title
-      this.description = newValue.description
-      this.status = newValue.status === 'complete'?true:false
-      this.file = [{name: newValue.file_name}]
+    async taskInfo(newValue){
+      if(this.isOpen){
+          const response = await getFileObject(newValue.file_name)
+
+          this.task = newValue
+          this.title = newValue.title
+          this.description = newValue.description
+          this.status = newValue.status === 'complete'?true:false
+          this.fileUpload = newValue.file_name ? toFileObject(response, newValue.file_name):newValue.file_name
+          this.filePath = newValue.file_name
+      }
     }
   },
   computed: {
+    //functions for the validation of task title.
     required() {
       return (val) => !!val || "Title is required";
     },

@@ -1,3 +1,8 @@
+<!--
+  This is the components for the buttons that can be seen in the table.
+  The view, edit, and delete button. this is being imported to the Content table to render on the table
+  so that every records fetched from the database will have action buttons.
+-->
 <template>
   <div class="btn-container q-gutter-sm">
     <q-btn
@@ -45,6 +50,7 @@ export default defineComponent({
     taskID:Number,
   },
   methods: {
+    //that will call the function openDialog from the parent component and passing title, type, id to the dialog.
     callOpenDialog(title, type, id) {
       this.dialogTitle = title;
       this.dialogType = type;
@@ -57,6 +63,7 @@ export default defineComponent({
     },
   },
   watch:{
+    //this will watch any changes in the variable taskID to make it always updated
     taskID(newValue){
       this.id = newValue
     }

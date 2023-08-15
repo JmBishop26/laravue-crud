@@ -19,8 +19,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+//api endpoints
 Route::get('/tasks', [TaskController::class, "getAllTasks"]);
 Route::get('/tasks/{id}', [TaskController::class, "getTask"]);
 Route::post('/create', [TaskController::class, "createTask"]);
 Route::delete('/delete/{id}', [TaskController::class, "deleteTask"]);
-Route::put('/tasks/edit/{id}', [TaskController::class, "editTask"]);
+Route::post('/tasks/edit/{id}', [TaskController::class, "editTask"]);
+
+Route::get('tasks/uploads/{fileName}', [TaskController::class, "getFileObject"]);

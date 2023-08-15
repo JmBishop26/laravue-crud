@@ -36,6 +36,7 @@
 <script>
 import { defineComponent, ref } from "vue";
 import EssentialLink from "components/EssentialLink.vue";
+import { fabLinkedin, fabFacebook, fabGithub } from '@quasar/extras/fontawesome-v5';
 
 const linksList = [
   {
@@ -46,39 +47,21 @@ const linksList = [
   },
   {
     title: "Github",
-    caption: "github.com/quasarframework",
-    icon: "code",
-    link: "https://github.com/quasarframework",
-  },
-  {
-    title: "Discord Chat Channel",
-    caption: "chat.quasar.dev",
-    icon: "chat",
-    link: "https://chat.quasar.dev",
-  },
-  {
-    title: "Forum",
-    caption: "forum.quasar.dev",
-    icon: "record_voice_over",
-    link: "https://forum.quasar.dev",
-  },
-  {
-    title: "Twitter",
-    caption: "@quasarframework",
-    icon: "rss_feed",
-    link: "https://twitter.quasar.dev",
+    caption: "github.com/JmBishop26",
+    icon: fabGithub,
+    link: "https://github.com/JmBishop26/laravue-crud",
   },
   {
     title: "Facebook",
-    caption: "@QuasarFramework",
-    icon: "public",
-    link: "https://facebook.quasar.dev",
+    caption: "@jm.obispo.7",
+    icon: fabFacebook,
+    link: "https://www.facebook.com/jm.obispo.7/",
   },
   {
-    title: "Quasar Awesome",
-    caption: "Community Quasar projects",
-    icon: "favorite",
-    link: "https://awesome.quasar.dev",
+    title: "LinkedIn",
+    caption: "John Michael Obispo",
+    icon: fabLinkedin,
+    link: "https://www.linkedin.com/in/john-michael-obispo-659634267/",
   },
 ];
 

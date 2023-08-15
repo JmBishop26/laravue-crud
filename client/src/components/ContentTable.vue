@@ -1,3 +1,6 @@
+<!--
+  this it the page where you can see all the records fetched from the database.
+ -->
 <template>
   <q-page class="container fit">
     <h1 class="title">To-Do Crud</h1>
@@ -51,6 +54,11 @@
           </q-badge>
         </td>
       </template>
+      <template v-slot:body-cell-file_name="props">
+        <td>
+          <a :href="fileURL(props.row.file_name)" target="_blank">{{ props.row.file_name }}</a>
+        </td>
+      </template>
     </q-table>
     <DialogTemplate
       :openDialog="isOpen"
@@ -67,6 +75,7 @@ import { defineComponent } from "vue";
 import ActionButtons from "./ActionButtons.vue";
 import DialogTemplate from "./DialogTemplate.vue";
 import { getAllTasks, getTask } from 'src/utils/functions/Tasks'
+import { readableDate, fileURL } from 'src/utils/functions/functions'
 const columns = [
   {
     name: "id",
@@ -98,12 +107,7 @@ const columns = [
     sortable: true,
     align: "center",
     format: (value, item) => {
-      // Your condition for formatting the date goes here
-      if (item.updated_at === null) {
-        return item.created_at;
-      } else {
-        return item.updated_at; // Default date formatting
-      }
+      return readableDate(item.updated_at) //usage of readableDate function to make date readable for anyone
     },
   },
   {
@@ -113,7 +117,7 @@ const columns = [
     sortable: true,
     align: "center",
     format: (value, item) => {
-      return item.status; // Use the value directly, as we'll customize rendering in the template
+      return item.status;
     },
   },
   {
@@ -150,12 +154,11 @@ export default defineComponent({
       task:{},
     };
   },
-  computed: {
-    useGridFormat() {
-      return this.$q.screen.sm || this.$q.screen.xs;
-    },
-  },
   methods: {
+    /*
+    function to open the dialog for adding, viewing, editing and deleting tasks. It pass object that contains title, type and id.
+    this is also the function that is being called by the buttons in the action buttons child component
+    */
     async openDialog({ title, type, id = null }) {
       this.dialogTitle = title;
       this.dialogType = type;
@@ -165,14 +168,15 @@ export default defineComponent({
         const response = await getTask(this.taskID)
         this.task = response.data
       }
-      console.log(this.dialogTitle, this.dialogType, this.taskID);
     },
     closeDialog(updatedValue) {
       this.isOpen = updatedValue;
       this.task = {}
     },
+    fileURL
   },
   async mounted(){
+    //fetches the data from the getAllTasks functions which connects to the laravel backend to fetch all the data from db
     const response = await getAllTasks()
     this.allTasks = response.data
   }

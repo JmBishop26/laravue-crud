@@ -21,7 +21,11 @@ export async function getTask(id){
 
 export async function newTask(formData){
   try {
-    const response = await axios.post(url+'/create', formData)
+    const response = await axios.post(url+'/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     return response.data
   } catch (error) {
     return error
@@ -39,8 +43,22 @@ export async function deleteTask(id){
 
 export async function editTask(formData, id){
   try {
-    const response = await axios.put(url+'/tasks/edit/'+id, formData)
+    const response = await axios.post(url+'/tasks/edit/'+id, formData,{
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     return response.data
+  } catch (error) {
+    return error
+  }
+}
+
+
+export async function getFileObject(file){
+  try {
+    const response = await axios.get(url+'/tasks/uploads/'+file, {responseType: 'arraybuffer'})
+    return response
   } catch (error) {
     return error
   }
