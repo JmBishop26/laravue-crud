@@ -87,3 +87,26 @@
     padding: 1rem 1.5rem;
   }
 }
+
+.q-dialog-plugin{
+  font-family: $font;
+  // color: $white;
+  .q-dialog__title{
+    background: $dark;
+    color: $white;
+    font-weight: 700;
+  }
+  .q-dialog__message{
+    padding: 1.5rem !important;
+    font-size: 1rem;
+  }
+  .q-card__actions{
+    // background: $primary;
+    .q-btn{
+      background: $dark;
+      color: $white !important;
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+}

@@ -95,7 +95,7 @@
             {{ header }}
           </div>
         </q-card-section>
-        <q-card-section class="row justify-center body-section">
+        <q-card-section class="row body-section">
           <span class="q-ml-sm">This action cannot be undone.</span>
         </q-card-section>
 

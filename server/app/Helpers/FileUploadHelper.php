@@ -1,7 +1,9 @@
 <?php
 // these are helper functions for uploading file in the uploads folder
 namespace App\Helpers;
+use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 class FileUploadHelper{
     //function to upload the file
     public function upload(Request $request, $fileName){
@@ -33,6 +35,20 @@ class FileUploadHelper{
             }
         } catch (\Throwable $th) {
             return 0;
+        }
+    }
+
+    public function deleteFile($fileName){
+        try {
+            $path='uploads/'.$fileName;
+            if(File::exists($path)){
+                File::delete($path);
+                return 1;
+            }else{
+                return -1;
+            }
+        } catch (\Throwable $th) {
+            return $th->getMessage();
         }
     }
 }

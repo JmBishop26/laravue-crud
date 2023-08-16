@@ -52,12 +52,19 @@ class TaskController extends Controller
             return response()->json(['message'=>$th->getMessage()], 500);
         }
     }
+    //function to delete file from the uploads folder upon deletion of task in the database.
     public function deleteTask($id){
         try {
+            $fileUploader = new FileUploadHelper();
             $task = Task::find($id);
             if($task){
-                $task->delete();
-                return response()->json(['message'=>'Task Successfully Deleted', 'success'=>true], 200);
+                $status = $fileUploader->deleteFile($task->file_name);
+                if($status===1||$status===-1){
+                    $task->delete();
+                    return response()->json(['message'=>'Task Successfully Deleted', 'success'=>true], 200);
+                }else{
+                    return response()->json(['message'=>$status, 'success'=>false], 404);
+                }
             }else{
                 return response()->json(['message'=>'Task not found' , 'success'=>false], 404);
             }

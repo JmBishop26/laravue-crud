@@ -81,6 +81,8 @@ export async function showAlert(response){
     title: response.success?'Success':'Failed',
     message: await response.message,
     ok: 'OK',
+    persistent:true,
+    html:true,
   };
 
   Dialog.create(dialog)
